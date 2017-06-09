@@ -3,12 +3,46 @@ require('superagent-charset')(superagent);
 var cheerio = require('cheerio');
 var base64 = require('./public/base64');
 var async = require('async');
+var mysql = require('mysql');
+var pool = mysql.createPool({
+//	connectionLimit : 100,
+	host     : '127.0.0.1',      
+	user     : 'admin', 
+	password : '',
+	port: '3316',
+	database:'luludb'
+});
 
 var task = [];  
 var host = 'http://www.dy2018.com';
 var items = [];
+var updats = [];
 
-function getPageData(callback,dat,idx){
+function saveToDb(data,callback){
+	pool.getConnection(function (err, conn) {
+		if (err) throw err;	
+		conn.query("SELECT * FROM `web_scan` WHERE `ref`='"+data.ref+"' AND `url`='"+data.url+"' ", function(err,rows,fields){
+			if(err)	throw err;
+			if(rows.length>0){
+				callback('已经存在数据:'+data.title,null);
+			}	
+			else{
+				//REPLACE INTO `web_scan` (`id`,`flag`,`title`,`ref`,`url`,`thunder`,`mark`,`tm`)VALUES(NULL,'film','11','22','33','44',1);
+				var vls = "(NULL,'"+data.flag+"','"+data.title+"','"+data.ref+"','"+data.url+"','"+data.thunder+"',1,CURDATE())";
+				conn.query("REPLACE INTO `web_scan` (`id`,`flag`,`title`,`ref`,`url`,`thunder`,`mark`,`tm`)VALUES"+vls, function(err,rows,fields){
+					if(err) throw err;
+					callback(null,data.title);
+				});
+			}
+			
+		});
+		conn.release();
+	});
+	
+	
+}
+
+function getPageData(callback,dats,idx){
 
 	superagent.get(items[idx].href)
 		.charset('gbk')
@@ -28,13 +62,24 @@ function getPageData(callback,dat,idx){
 					thunderP=base64.ThunderEncode(oldhref);
 				}
 			});
-			dat.push({
-				title:titles,
-				href:oldhref,
-				thunder:thunderP
+			var data = {
+						flag:'film',
+						title:titles,
+						ref:items[idx].href,
+						url:oldhref,
+					    thunder:thunderP
+						}
+			dats.push(data);
+			//更新到数据库操作
+			saveToDb(data,function(err,res){
+				if(err)
+					console.log(err);
+				else
+					updats.push(data);
 			});
+			//
 			setTimeout(function() {
-			  	callback(null,dat,idx+1)
+			  	callback(null,dats,idx+1)
 			}, 2000)
 		})
 }
@@ -64,24 +109,24 @@ superagent.get(host+'/html/gndy/dyzz/index.html')
 
 	console.time('访问3个网站时间统计');
 
-	var datas = [];
 	task.push(function (callback) {
-		callback(null,datas,0);
+		callback(null,[],0);
 	})
 	for (var i in items){
-		//if(i>1)
-		//	continue;
-		task.push(function(dat,idx,callback){
+//		if(i>3)
+//			continue;
+		task.push(function(dats,idx,callback){
 			console.log(idx+1+'/'+items.length);
-			getPageData(callback,dat,idx)
+			getPageData(callback,dats,idx)
 		})
 	}
 
 	async.waterfall(task, function(err,result){
 	  	console.timeEnd('访问3个网站时间统计');
 	  	if(err) return console.log(err);
-		console.log(result);
-	  	console.log('全部访问成功');
+		console.log(updats);
+	  	console.log('全部访问成功 共更新了 '+updats.length+' 条数据');
+		pool.end();
 	})
 
 });
