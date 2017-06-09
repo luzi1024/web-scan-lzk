@@ -6,8 +6,8 @@ var async = require('async');
 var mysql = require('mysql');
 var pool = mysql.createPool({
 //	connectionLimit : 100,
-	host     : '127.0.0.1',      
-	user     : 'admin', 
+	host     : '127.0.0.1',
+	user     : 'admin',
 	password : '',
 	port: '3316',
 	database:'luludb'
@@ -91,7 +91,6 @@ superagent.get(host+'/html/gndy/dyzz/index.html')
 .end(function(err,sres){
 	if(err) {
 		console.log(err);
-		res.render('index_scan',{title:'dy2018',body:err.error});
 		return next(err)
 	}
 	var $ = cheerio.load(sres.text, {decodeEntities: false});
@@ -111,7 +110,7 @@ superagent.get(host+'/html/gndy/dyzz/index.html')
 
 	task.push(function (callback) {
 		callback(null,[],0);
-	})
+	});
 	for (var i in items){
 //		if(i>3)
 //			continue;
