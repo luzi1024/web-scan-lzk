@@ -4,7 +4,7 @@ var cheerio = require('cheerio');
 var base64 = require('./public/base64');
 var async = require('async');
 var mysql = require('mysql');
-var logger = require("logger").createLogger('web-scan.log');
+var logger = require("logger").createLogger('../logs/web-scan.log'); // 需要手动创建logs文件夹
 var pool = require('./public/mysqlpool');
 
 var task = [];  
