@@ -6,6 +6,7 @@ var async = require('async');
 var mysql = require('mysql');
 var logger = require("logger").createLogger('../logs/web-scan.log'); // 需要手动创建logs文件夹
 var pool = require('./public/mysqlpool');
+var schedule = require('node-schedule'); // 定时任务模块
 
 var task = [];  
 var host = 'http://www.dy2018.com';
@@ -78,55 +79,65 @@ function getPageData(callback,dats,idx){
 		})
 }
 
+// 爬取网页 并更新数据库
+function FatchPage() {
 
+	superagent.get(host+'/html/gndy/dyzz/index.html')
+		.charset('gbk')
+		.end(function(err,sres){
+			if(err) {
+				console.log(err);
+				return next(err)
+			}
+			var $ = cheerio.load(sres.text, {decodeEntities: false});
 
-superagent.get(host+'/html/gndy/dyzz/index.html')
-.charset('gbk')
-.end(function(err,sres){
-	if(err) {
-		console.log(err);
-		return next(err)
-	}
-	var $ = cheerio.load(sres.text, {decodeEntities: false});
+			//$('.co_content222 ul li a').each(function(idx,element){
+			$('.co_content8 td b a').each(function(idx,element){
+				var $element = $(element);
+				items.push({
+					href: host+$element.attr('href'),
+					title: $element.attr('title')
 
-	//$('.co_content222 ul li a').each(function(idx,element){
-	$('.co_content8 td b a').each(function(idx,element){
-		var $element = $(element);
-		items.push({
-			href: host+$element.attr('href'),
-			title: $element.attr('title')
+				})
+			});
+			console.log(items);
 
-		})
-	});
-	console.log(items);
+			console.time('访问3个网站时间统计');
 
-	console.time('访问3个网站时间统计');
+			task.push(function (callback) {
+				callback(null,[],0);
+			});
+			for (var i in items){
+				if(i>5)
+					continue;
+				task.push(function(dats,idx,callback){
+					console.log(idx+1+'/'+items.length);
+					getPageData(callback,dats,idx)
+				})
+			}
 
-	task.push(function (callback) {
-		callback(null,[],0);
-	});
-	for (var i in items){
-		if(i>5)
-			continue;
-		task.push(function(dats,idx,callback){
-			console.log(idx+1+'/'+items.length);
-			getPageData(callback,dats,idx)
-		})
-	}
+			async.waterfall(task, function(err,result){
+				console.timeEnd('访问3个网站时间统计');
+				if(err) return console.log(err);
+				console.log('全部访问成功 共更新了 '+updats.length+' 条数据');
+				logger.info("全部访问成功 共更新了",updats.length,"条数据");
+				for (var itm in updats){
+					console.log(updats[itm].title);
+					logger.info("[Add]",updats[itm].title);
+				}
+				pool.end();
+			})
 
-	async.waterfall(task, function(err,result){
-	  	console.timeEnd('访问3个网站时间统计');
-	  	if(err) return console.log(err);
-	  	console.log('全部访问成功 共更新了 '+updats.length+' 条数据');
-		logger.info("全部访问成功 共更新了",updats.length,"条数据");
-		for (var itm in updats){
-			console.log(updats[itm].title);
-			logger.info("[Add]",updats[itm].title);
-		}
-		pool.end();
-	})
+		});
+}
 
+logger.info("启动网页爬虫!");
+
+schedule.scheduleJob('0 0 */6 * * *', function(){
+	console.log('scheduleCronstyle:' + new Date());
+	FatchPage();
 });
+
 
 /*
 function taskn(dat,ds,callback) {
