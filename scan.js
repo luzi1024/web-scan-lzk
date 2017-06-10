@@ -4,14 +4,8 @@ var cheerio = require('cheerio');
 var base64 = require('./public/base64');
 var async = require('async');
 var mysql = require('mysql');
-var pool = mysql.createPool({
-//	connectionLimit : 100,
-	host     : '127.0.0.1',
-	user     : 'admin',
-	password : '',
-	port: '3316',
-	database:'luludb'
-});
+var logger = require("logger").createLogger('web-scan.log');
+var pool = require('./public/mysqlpool');
 
 var task = [];  
 var host = 'http://www.dy2018.com';
@@ -112,8 +106,8 @@ superagent.get(host+'/html/gndy/dyzz/index.html')
 		callback(null,[],0);
 	});
 	for (var i in items){
-//		if(i>3)
-//			continue;
+		if(i>5)
+			continue;
 		task.push(function(dats,idx,callback){
 			console.log(idx+1+'/'+items.length);
 			getPageData(callback,dats,idx)
@@ -123,8 +117,12 @@ superagent.get(host+'/html/gndy/dyzz/index.html')
 	async.waterfall(task, function(err,result){
 	  	console.timeEnd('访问3个网站时间统计');
 	  	if(err) return console.log(err);
-		console.log(updats);
 	  	console.log('全部访问成功 共更新了 '+updats.length+' 条数据');
+		logger.info("全部访问成功 共更新了",updats.length,"条数据");
+		for (var itm in updats){
+			console.log(updats[itm].title);
+			logger.info("[Add]",updats[itm].title);
+		}
 		pool.end();
 	})
 
