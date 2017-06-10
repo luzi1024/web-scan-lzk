@@ -125,7 +125,7 @@ function FatchPage() {
 					console.log(updats[itm].title);
 					logger.info("[Add]",updats[itm].title);
 				}
-				pool.end();
+//				pool.end();
 			})
 
 		});
