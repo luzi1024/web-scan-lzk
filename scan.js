@@ -8,10 +8,29 @@ var logger = require("logger").createLogger(process.env['HOME']+'/logs/web-scan.
 var pool = require('./public/mysqlpool');
 var schedule = require('node-schedule'); // 定时任务模块
 
+var email 	= require("emailjs");
+var emserver ;
+
 var task = [];  
 var host = 'http://www.dy2018.com';
 var items = [];
 var updats = [];
+
+function getemailk(callback) {
+	pool.getConnection(function (err, conn) {
+		if (err)
+			return callback(err);
+		conn.query("SELECT `EMAIL` FROM `user_idx` WHERE `name`='lulu' ", function(err,rows,fields){
+			if(err)
+				return;
+			if(rows.length>0) {
+				callback(rows[0].EMAIL);
+			}
+		});
+
+		conn.release();
+	});
+}
 
 function saveToDb(data,callback){
 	pool.getConnection(function (err, conn) {
@@ -132,6 +151,14 @@ function FatchPage(callback) {
 }
 
 logger.info("启动网页爬虫!");
+getemailk(function (res) {
+	emserver = email.server.connect({
+		user:    "luzikuan1024@qq.com",
+		password:res,
+		host:    "smtp.qq.com",
+		ssl:     true
+	});
+});
 
 schedule.scheduleJob('0 0 */1 * * *', function(){
 	task = [];
@@ -143,6 +170,29 @@ schedule.scheduleJob('0 0 */1 * * *', function(){
 		if(err){
 			console.log('::'+res);
 			logger.error(res);
+		}
+		else{
+			if(updats.length>0){
+				var dat = "<html><p>Hi:";
+				for (var itm in updats){
+					dat += (updats[itm].title+"<br />");
+				}
+				dat += "</p></html>";
+				logger.info("SEND EMAIL : "+dat);
+				var message	= {
+					text:	"New File!",
+					from:    "<luzikuan1024@qq.com>",
+					to:      "<luzikuan1024@qq.com>,<936276128@qq.com>",
+					cc:		"",
+					subject:	"This is testing message",
+					attachment:
+						[
+							{data:dat, alternative:true}
+							//{path:"path/to/file.zip", type:"application/zip", name:"renamed.zip"}
+						]
+				};
+				emserver.send(message, function(err, message) { console.log(err || message); });
+			}
 		}
 	});
 });
