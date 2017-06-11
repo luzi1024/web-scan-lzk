@@ -15,9 +15,11 @@ var updats = [];
 
 function saveToDb(data,callback){
 	pool.getConnection(function (err, conn) {
-		if (err) throw err;	
+		if (err)
+			return callback(err);
 		conn.query("SELECT * FROM `web_scan` WHERE `ref`='"+data.ref+"' AND `url`='"+data.url+"' ", function(err,rows,fields){
-			if(err)	throw err;
+			if(err)
+				return callback(err);
 			if(rows.length>0){
 				callback('已经存在数据:'+data.title,null);
 			}	
@@ -25,7 +27,8 @@ function saveToDb(data,callback){
 				//REPLACE INTO `web_scan` (`id`,`flag`,`title`,`ref`,`url`,`thunder`,`mark`,`tm`)VALUES(NULL,'film','11','22','33','44',1);
 				var vls = "(NULL,'"+data.flag+"','"+data.title+"','"+data.ref+"','"+data.url+"','"+data.thunder+"',1,CURDATE())";
 				conn.query("REPLACE INTO `web_scan` (`id`,`flag`,`title`,`ref`,`url`,`thunder`,`mark`,`tm`)VALUES"+vls, function(err,rows,fields){
-					if(err) throw err;
+					if(err)
+						return callback(err);
 					callback(null,data.title);
 				});
 			}
@@ -43,8 +46,7 @@ function getPageData(callback,dats,idx){
 		.charset('gbk')
 		.end(function(err,detalPage){
 			if(err){
-				console.log("err:"+err);
-				callback(err);
+				return callback('50L:'+err,dats,idx+1);
 			}
 			var $ = cheerio.load(detalPage.text, {decodeEntities: false});
 			var titles   = $("h1").text();
@@ -63,7 +65,7 @@ function getPageData(callback,dats,idx){
 						ref:items[idx].href,
 						url:oldhref,
 					    thunder:thunderP
-						}
+						};
 			dats.push(data);
 			//更新到数据库操作
 			saveToDb(data,function(err,res){
@@ -80,14 +82,13 @@ function getPageData(callback,dats,idx){
 }
 
 // 爬取网页 并更新数据库
-function FatchPage() {
+function FatchPage(callback) {
 
 	superagent.get(host+'/html/gndy/dyzz/index.html')
 		.charset('gbk')
 		.end(function(err,sres){
 			if(err) {
-				console.log(err);
-				return next(err)
+				return callback(err,'89L:'+err.status);
 			}
 			var $ = cheerio.load(sres.text, {decodeEntities: false});
 
@@ -97,11 +98,9 @@ function FatchPage() {
 				items.push({
 					href: host+$element.attr('href'),
 					title: $element.attr('title')
-
 				})
 			});
-			console.log(items);
-
+			console.log('共获取 '+items.length+' 个条目');
 			console.time('访问3个网站时间统计');
 
 			task.push(function (callback) {
@@ -118,24 +117,34 @@ function FatchPage() {
 
 			async.waterfall(task, function(err,result){
 				console.timeEnd('访问3个网站时间统计');
-				if(err) return console.log(err);
+				if(err)
+					return callback(err,err);
 				console.log('全部访问成功 共更新了 '+updats.length+' 条数据');
 				logger.info("全部访问成功 共更新了",updats.length,"条数据");
+
 				for (var itm in updats){
 					console.log(updats[itm].title);
 					logger.info("[Add]",updats[itm].title);
 				}
 //				pool.end();
 			})
-
 		});
 }
 
-logger.info("启动网页爬虫!");
+//logger.info("启动网页爬虫!");
 
-schedule.scheduleJob('0 0 */6 * * *', function(){
+schedule.scheduleJob('0 0 */1 * * *', function(){
+	task = [];
+	items = [];
+	updats = [];
+
 	console.log('scheduleCronstyle:' + new Date());
-	FatchPage();
+	FatchPage(function (err,res) {
+		if(err){
+			console.log('::'+res);
+			logger.error(res);
+		}
+	});
 });
 
 
