@@ -131,7 +131,7 @@ function FatchPage(callback) {
 		});
 }
 
-//logger.info("启动网页爬虫!");
+logger.info("启动网页爬虫!");
 
 schedule.scheduleJob('0 0 */1 * * *', function(){
 	task = [];
