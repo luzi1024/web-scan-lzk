@@ -8,8 +8,8 @@ var logger = require("logger").createLogger(process.env['HOME']+'/logs/web-scan.
 var pool = require('./public/mysqlpool');
 var schedule = require('node-schedule'); // 定时任务模块
 
-var email 	= require("emailjs");
-var emserver ;
+var nodemailer 	= require("nodemailer");
+var transporter ;
 
 var task = [];  
 var host = 'http://www.dy2018.com';
@@ -153,11 +153,14 @@ function FatchPage(callback) {
 
 logger.info("启动网页爬虫!");
 getemailk(function (res) {
-	emserver = email.server.connect({
-		user:    "luzikuan1024@qq.com",
-		password:res,
-		host:    "smtp.qq.com",
-		ssl:     true
+	nodemailer.createTransport({
+		host: 'smtp.qq.com',
+		port: 465,
+		secure: true, // secure:true for port 465, secure:false for port 587
+		auth: {
+			user: 'luzikuan1024@qq.com',
+			pass: res
+		}
 	});
 });
 
@@ -174,25 +177,25 @@ schedule.scheduleJob('0 0 */1 * * *', function(){
 		}
 		else{
 			if(updats.length>0){
-				var dat = "<html><p>Hi:";
+				var dat = "";
 				for (var itm in updats){
-					dat += (updats[itm].title+"<br />");
+					dat += ("<p>"+updats[itm].title+"</p>");
 				}
-				dat += "</p></html>";
 				logger.info("SEND EMAIL : "+dat);
-				var message	= {
-					text:	"New File!",
-					from:    "<luzikuan1024@qq.com>",
-					to:      "<luzikuan1024@qq.com>,<936276128@qq.com>",
-					cc:		"",
-					subject:	"This is testing message",
-					attachment:
-						[
-							{data:dat, alternative:true}
-							//{path:"path/to/file.zip", type:"application/zip", name:"renamed.zip"}
-						]
+				let mailOptions = {
+					from: '"lulu" <luzikuan1024@qq.com>', // sender address
+					to: 'luzikuan1024@qq.com,936276128@qq.com', // list of receivers
+					subject: 'This is testing message', // Subject line
+					text: '亲爱的 你好:', // plain text body
+					html: dat // html body
 				};
-				emserver.send(message, function(err, message) { console.log(err || message); });
+				transporter.sendMail(mailOptions, (error, info) => {
+					if (error) {
+						logger.error(error);
+						return console.log(error);
+					}
+					logger.info('Message %s sent: %s', info.messageId, info.response);
+				});
 			}
 		}
 	});
