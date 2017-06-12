@@ -86,7 +86,7 @@ function getPageData(callback,dats,idx){
 					    thunder:thunderP
 						};
 			dats.push(data);
-			//更新到数据库操作
+			//更新到数据库操作 失败需要显示在logger中 ！！！待完善
 			saveToDb(data,function(err,res){
 				if(err)
 					console.log(err);
@@ -145,6 +145,7 @@ function FatchPage(callback) {
 					console.log(updats[itm].title);
 					logger.info("[Add]",updats[itm].title);
 				}
+				callback(null,null);
 //				pool.end();
 			})
 		});
