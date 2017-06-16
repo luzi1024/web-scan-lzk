@@ -155,7 +155,7 @@ function FatchPage(callback) {
 
 logger.info("启动网页爬虫!");
 getemailk(function (res) {
-	nodemailer.createTransport({
+	transporter = nodemailer.createTransport({
 		host: 'smtp.qq.com',
 		port: 465,
 		secure: true, // secure:true for port 465, secure:false for port 587
