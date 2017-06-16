@@ -164,7 +164,7 @@ getemailk(function (res) {
 	});
 });
 
-schedule.scheduleJob('0 0 */1 * * *', function(){
+schedule.scheduleJob('0 0 */2 * * *', function(){
 	task = [];
 	items = [];
 	updats = [];
@@ -189,7 +189,7 @@ schedule.scheduleJob('0 0 */1 * * *', function(){
 					text: '亲爱的 你好:', // plain text body
 					html: dat // html body
 				};
-				transporter.sendMail(mailOptions, (error, info) => {
+				transporter.sendMail(mailOptions, function(error, info){
 					if (error) {
 						logger.error(error);
 						return console.log(error);
