@@ -65,7 +65,9 @@ function getPageData(callback,dats,idx){
 		.charset('gbk')
 		.end(function(err,detalPage){
 			if(err){
-				return callback('50L:'+err,dats,idx+1);
+				console.log('68L: '+err+items[idx].title);
+				logger.info("68L: ",err,items[idx].title);
+				return callback(null,dats,idx+1); // 跳过当前 继续执行其他条目
 			}
 			var $ = cheerio.load(detalPage.text, {decodeEntities: false});
 			var titles   = $("h1").text();
