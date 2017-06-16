@@ -181,7 +181,7 @@ schedule.scheduleJob('0 0 */2 * * *', function(){
 			if(updats.length>0){
 				var dat = "";
 				for (var itm in updats){
-					dat += ("<p>"+updats[itm].title+"</p>");
+					dat += ("<p><a href='"+updats[itm].ref+"'>"+updats[itm].title+"</a></p>");
 				}
 				logger.info("SEND EMAIL : "+dat);
 				let mailOptions = {
