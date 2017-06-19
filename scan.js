@@ -65,8 +65,8 @@ function getPageData(callback,dats,idx){
 		.charset('gbk')
 		.end(function(err,detalPage){
 			if(err){
-				console.log('68L: '+err+items[idx].title);
-				logger.info("68L: ",err,items[idx].title);
+				console.log('getPageData Error(68L): '+err.status+items[idx].title);
+				logger.info("getPageData Error(68L): ",err.status,items[idx].title);
 				return callback(null,dats,idx+1); // 跳过当前 继续执行其他条目
 			}
 			var $ = cheerio.load(detalPage.text, {decodeEntities: false});
@@ -109,7 +109,7 @@ function FatchPage(callback) {
 		.charset('gbk')
 		.end(function(err,sres){
 			if(err) {
-				return callback(err,'89L:'+err.status);
+				return callback(err,'FatchPage Error(89L):'+err.status);
 			}
 			var $ = cheerio.load(sres.text, {decodeEntities: false});
 
@@ -183,11 +183,10 @@ schedule.scheduleJob('0 0 */2 * * *', function(){
 				for (var itm in updats){
 					dat += ("<p><a href='"+updats[itm].ref+"'>"+updats[itm].title+"</a></p>");
 				}
-				logger.info("SEND EMAIL : "+dat);
 				let mailOptions = {
 					from: '"lulu" <luzikuan1024@qq.com>', // sender address
 					to: 'luzikuan1024@qq.com,936276128@qq.com', // list of receivers
-					subject: 'This is testing message', // Subject line
+					subject: '--新片上映--', // Subject line
 					text: '亲爱的 你好:', // plain text body
 					html: dat // html body
 				};
