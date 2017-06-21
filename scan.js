@@ -80,21 +80,26 @@ function getPageData(callback,dats,idx){
 					thunderP=base64.ThunderEncode(oldhref);
 				}
 			});
-			var data = {
+			if(titles && oldhref && thunderP){
+				var data = {
 						flag:'film',
 						title:titles,
 						ref:items[idx].href,
 						url:oldhref,
 					    thunder:thunderP
-						};
-			dats.push(data);
-			//更新到数据库操作 失败需要显示在logger中 ！！！待完善
-			saveToDb(data,function(err,res){
-				if(err)
-					console.log(err);
-				else
-					updats.push(data);
-			});
+				};
+				dats.push(data);
+				//更新到数据库操作 失败需要显示在logger中 ！！！待完善
+				saveToDb(data,function(err,res){
+					if(err)
+						console.log(err);
+					else
+						updats.push(data);
+				});
+			}
+			else{
+				logger.info("getPageData Error(101L): 网页解析错误- ",items[idx].href);
+			}
 			//
 			setTimeout(function() {
 			  	callback(null,dats,idx+1)
@@ -198,6 +203,7 @@ schedule.scheduleJob('0 0 */2 * * *', function(){
 					logger.info('Message %s sent: %s', info.messageId, info.response);
 				});
 			}
+
 		}
 	});
 });
