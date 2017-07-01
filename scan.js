@@ -12,7 +12,7 @@ var nodemailer 	= require("nodemailer");
 var transporter ;
 
 var task = [];  
-var host = 'http://www.dy2018.com';
+var host = 'http://www.dygod.net';
 var items = [];
 var updats = [];
 
@@ -190,7 +190,7 @@ schedule.scheduleJob('0 0 */2 * * *', function(){
 				}
 				let mailOptions = {
 					from: '"lulu" <luzikuan1024@qq.com>', // sender address
-					to: 'luzikuan1024@qq.com,936276128@qq.com', // list of receivers
+					to: 'luzikuan1024@qq.com,936276128@qq.com,510645827@qq.com', // list of receivers
 					subject: '--新片上映--', // Subject line
 					text: '亲爱的 你好:', // plain text body
 					html: dat // html body
