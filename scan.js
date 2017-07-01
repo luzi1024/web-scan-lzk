@@ -171,7 +171,7 @@ getemailk(function (res) {
 	});
 });
 
-schedule.scheduleJob('0 0 */2 * * *', function(){
+schedule.scheduleJob('0 0 */6 * * *', function(){
 	task = [];
 	items = [];
 	updats = [];
