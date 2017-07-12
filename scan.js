@@ -12,7 +12,8 @@ var nodemailer 	= require("nodemailer");
 var transporter ;
 
 var task = [];  
-var host = 'http://www.dygod.net';
+var host = 'http://www.dy2018.net';
+//var host = 'http://www.dygod.net';
 var items = [];
 var updats = [];
 
